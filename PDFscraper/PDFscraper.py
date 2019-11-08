@@ -10,6 +10,11 @@ while True:
         print('This will scrape circuit numbers from a PDF. It requires a list of all panel names in the job.\nUse only power drawings you want circuits from.\n')
         plans = input('Enter the name of the PDF plans to be scraped: ')
         plans = plans + '.pdf'
+        raw = parser.from_file(plans)
+        content = raw['content']
+        split = content.split('\n')
+        circuits = []
+        panelNames = []
         break
     except:
         print('That .pdf file was not found. Try again.\n')
@@ -26,24 +31,16 @@ while True:
     try:
         panelNameFile = input('Enter the name of the .txt file with all panel names, exported from Revit: ')
         panelNameFile = panelNameFile + ('.txt')
+        with open(panelNameFile) as file:
+            lines = file.readlines()[2:]
+            for line in lines:
+                line = line.strip()
+                line = line.strip('"')
+                if line is not '':
+                    panelNames.append(line)
         break
     except:
         print('That .txt file was not found. Try again.\n')
-
-
-raw = parser.from_file(plans)
-content = raw['content']
-split = content.split('\n')
-circuits = []
-panelNames = []
-
-with open(panelNameFile) as file:
-    lines = file.readlines()[2:]
-    for line in lines:
-        line = line.strip()
-        line = line.strip('"')
-        if line is not '':
-            panelNames.append(line)
 
 for item in split:
     if item.startswith(tuple(panelNames)) and '-' in item:
@@ -89,3 +86,4 @@ for circuit in circuits:
     nextRow += 1
 
 wb.save('circuits.xlsx')
+print('-------------------------------DONE-------------------------------')
