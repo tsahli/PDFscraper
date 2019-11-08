@@ -1,27 +1,49 @@
 import tika
 import PyPDF2
 import os
+import openpyxl
+import sys
 from tika import parser
 
-plans = "UU Housing Power Drawings.pdf"
+while True:
+    try:
+        print('This will scrape circuit numbers from a PDF. It requires a list of all panel names in the job.\nUse only power drawings you want circuits from.\n')
+        plans = input('Enter the name of the PDF plans to be scraped: ')
+        plans = plans + '.pdf'
+        break
+    except:
+        print('That .pdf file was not found. Try again.\n')
+
+while True:
+    try:
+        minLabelNumber = input('Enter the minimum number of labels to create for each circuit: ')
+        minLabelNumber = int(minLabelNumber)
+        break
+    except:
+        print('Please enter a whole number only.\n')
+
+while True:
+    try:
+        panelNameFile = input('Enter the name of the .txt file with all panel names, exported from Revit: ')
+        panelNameFile = panelNameFile + ('.txt')
+        break
+    except:
+        print('That .txt file was not found. Try again.\n')
+
+
 raw = parser.from_file(plans)
 content = raw['content']
 split = content.split('\n')
 circuits = []
 panelNames = []
 
-with open('Electrical Equipment Schedule.txt') as file:
-    lines = file.readlines()
+with open(panelNameFile) as file:
+    lines = file.readlines()[2:]
     for line in lines:
         line = line.strip()
         line = line.strip('"')
         if line is not '':
             panelNames.append(line)
-
-#for item in split:
-#    if any(item in split for item in panelNames):
-#        if '-' in item:
-#            circuits.append(item)
 
 for item in split:
     if item.startswith(tuple(panelNames)) and '-' in item:
@@ -55,5 +77,15 @@ for item in split:
 
 circuits.sort()
 os.remove('rotated.pdf')
+
+wb = openpyxl.Workbook()
+sheet = wb.active
+sheet.title = 'Sheet1'
+nextRow = 1
+
 for circuit in circuits:
-    print(circuit)
+    sheet.cell(row = nextRow, column = 1, value = circuit)
+    sheet.cell(row = nextRow, column = 2, value = minLabelNumber)
+    nextRow += 1
+
+wb.save('circuits.xlsx')
