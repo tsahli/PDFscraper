@@ -85,5 +85,5 @@ for circuit in circuits:
     sheet.cell(row = nextRow, column = 2, value = minLabelNumber)
     nextRow += 1
 
-wb.save('circuits.xlsx')
+wb.save(plans.strip('.pdf') + ' circuits' + '.xlsx')
 print('-------------------------------DONE-------------------------------')
